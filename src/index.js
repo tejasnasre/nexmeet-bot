@@ -79,6 +79,32 @@ app.get("/health", (req, res) => {
 // Error handling
 app.use(errorHandler);
 
+// Add a global error handler for the bot
+bot.on("polling_error", (error) => {
+  console.error("Telegram Bot Polling Error:", error);
+});
+
+// Add a message for when the server is starting up
+let isServerStarting = true;
+setTimeout(() => {
+  isServerStarting = false;
+}, 30000); // 30 seconds startup grace period
+
+// Modify the bot message handler to include startup message
+bot.on("message", async (msg) => {
+  if (isServerStarting) {
+    try {
+      await bot.sendMessage(
+        msg.chat.id,
+        "🔄 <i>Server is starting up. Please wait a few seconds and try your request again.</i>",
+        { parse_mode: "HTML" }
+      );
+    } catch (error) {
+      console.error("Error sending startup message:", error);
+    }
+  }
+});
+
 // User session storage
 const userSessions = new Map();
 
@@ -114,10 +140,15 @@ I can help you discover amazing events and hackathons. Here's what you can do:
 • See popular events
 
 Please select an option from the menu below:
+
+<i>Note: If the bot doesn't respond immediately, please wait a few seconds and try again. This is because the server might be in sleep mode on the free tier.</i>
 `;
 
   try {
-    await bot.sendMessage(chatId, welcomeMessage, mainMenuKeyboard);
+    await bot.sendMessage(chatId, welcomeMessage, {
+      ...mainMenuKeyboard,
+      parse_mode: "HTML",
+    });
   } catch (error) {
     console.error("Error sending welcome message:", error);
     await bot.sendMessage(
