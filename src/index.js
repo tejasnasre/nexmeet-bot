@@ -40,7 +40,8 @@ app.use(
       if (
         !origin ||
         origin.includes("https://api.telegram.org") ||
-        origin.includes(".vercel.app")
+        origin.includes(".vercel.app") ||
+        origin.includes(".onrender.com")
       ) {
         callback(null, true);
       } else {
